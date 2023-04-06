@@ -48,7 +48,7 @@
     <EditText
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:id="@+id/smessage"
+        android:id="@+id/client_message"
         android:enabled="false"
         android:layout_alignParentBottom="true"
         android:hint="Message to Server"

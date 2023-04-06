@@ -6,6 +6,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import java.io.DataInputStream;
 import java.io.DataOutputStream;
@@ -33,7 +34,7 @@ public class ClientActivity extends AppCompatActivity {
         chat = (TextView) findViewById(R.id.chat);
         serverIp = (EditText) findViewById(R.id.server_ip);
         clientName = (EditText)findViewById(R.id.user_name);
-        smessage = (EditText) findViewById(R.id.smessage);
+        smessage = (EditText) findViewById(R.id.client_message);
         sent = (Button) findViewById(R.id.sent_button);
         button_connect = (Button) findViewById(R.id.button_connect);
         button_disconnect = (Button) findViewById(R.id.button_disconnect);
@@ -47,7 +48,16 @@ public class ClientActivity extends AppCompatActivity {
         });
 
         button_connect.setOnClickListener(v -> {
-            if (serverIp.getText() != null && !serverIp.getText().toString().equals("") && clientName.getText() != null && !clientName.getText().toString().equals("")) {
+            if(serverIp.getText() == null || serverIp.getText().toString().equals("")){
+                Toast.makeText(getApplicationContext(),"Server IP cannot be empty", Toast.LENGTH_SHORT).show();
+            }
+            else if(clientName.getText() == null || clientName.getText().toString().equals("")){
+                Toast.makeText(getApplicationContext(),"Client Name cannot be empty", Toast.LENGTH_SHORT).show();
+            }
+            else if(clientName.getText() != null && clientName.getText().toString().indexOf('@') != -1){
+                Toast.makeText(getApplicationContext(),"Cannot contain '@' character", Toast.LENGTH_SHORT).show();
+            }
+            else {
                 serverIpAddress = serverIp.getText().toString();
                 Thread clientThread = new Thread(new
                         ClientThread());
@@ -65,6 +75,7 @@ public class ClientActivity extends AppCompatActivity {
                     sent.setEnabled(false);
                     button_disconnect.setEnabled(false);
                     smessage.setEnabled(false);
+                    msg = "";
 
                     Thread exitConnection = new Thread(new exitConnection());
                     exitConnection.start();
@@ -92,13 +103,12 @@ public class ClientActivity extends AppCompatActivity {
         @Override
         public void run() {
             try {
-                str = "*** Client " + clientName.getText().toString() + " left!!! ***"+ "\n";
+                str = "/quit\n";
                 handler.post(() -> {
                     chat.setText("Disconnected from server");
                 });
                 os.writeBytes(str);
                 os.flush();
-                socket.close();
             } catch (Exception e) {
                 System.out.println(e);
             }
@@ -109,9 +119,8 @@ public class ClientActivity extends AppCompatActivity {
         @Override
         public void run() {
             try {
-                str = smessage.getText().toString();
-                str = "<"+ clientName.getText().toString() + "> " + str + "\n";
-                msg = msg + str;
+                str = smessage.getText().toString() + "\n";
+                msg = msg + "<"+ clientName.getText().toString() + "> " + str;
                 handler.post(() -> {
                     chat.setText(msg);
                     smessage.setText("");
@@ -147,18 +156,34 @@ public class ClientActivity extends AppCompatActivity {
                  ******************************************/
                 in = new DataInputStream(socket.getInputStream());
                 os = new DataOutputStream(socket.getOutputStream());
-                str = "*** A new client " + clientName.getText().toString() + " joined!!! ***"+ "\n";
-                os.writeBytes(str);
+
+                os.writeBytes(clientName.getText().toString().trim()+"\n");
                 os.flush();
 
                 String line = null;
-                while ((line = in.readLine()) != null) {
+                while (in!=null && (line = in.readLine()) != null) {
+                    if (line.startsWith("/busy")) {
+                        handler.post(() ->{
+                            chat.setText("Server too busy. Try again later");
+                            smessage.setEnabled(false);
+                            sent.setEnabled(false);
+                            button_disconnect.setEnabled(false);
+                            button_connect.setEnabled(true);
+                            serverIp.setEnabled(true);
+                            clientName.setEnabled(true);
+                        });
+                        break;
+                    }
+
                     msg = msg + "<Server> " + line + "\n";
                     handler.post(() -> chat.setText(msg));
                 }
-                in.close();
-                socket.close();
 
+                if(in!=null) in.close();
+                if(socket!=null) socket.close();
+
+            } catch (IOException e) {
+                handler.post(() -> Toast.makeText(getApplicationContext(),"Connection Error", Toast.LENGTH_SHORT).show());
             } catch (Exception e) {
                 System.out.println(e);
             }

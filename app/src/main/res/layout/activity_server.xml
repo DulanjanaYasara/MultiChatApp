@@ -20,25 +20,25 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Send"
-        android:id="@+id/button_sent"
+        android:id="@+id/button_send"
         android:layout_alignParentBottom="true"
         android:layout_alignParentEnd="true" />
     <EditText
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:id="@+id/smessage"
+        android:id="@+id/client_message"
         android:enabled="false"
         android:hint="enter text to sent"
         android:layout_alignParentBottom="true"
-        android:layout_toStartOf="@+id/button_sent" />
+        android:layout_toStartOf="@+id/button_send" />
 
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_below="@+id/display_status"
         android:layout_marginTop="5dp"
-        android:layout_above="@+id/button_sent"
-        android:layout_alignEnd="@+id/button_sent"
+        android:layout_above="@+id/button_send"
+        android:layout_alignEnd="@+id/button_send"
         android:layout_alignParentStart="true">
         <TextView
             android:layout_width="wrap_content"
