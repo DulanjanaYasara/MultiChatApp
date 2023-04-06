@@ -39,7 +39,7 @@ public class ServerActivity extends AppCompatActivity {
         String ip = Formatter.formatIpAddress(wifiManager.getConnectionInfo().getIpAddress());
         clientMessage = (EditText) findViewById(R.id.client_message);
         chat = (TextView) findViewById(R.id.chat);
-        displayStatus = (TextView)findViewById(R.id.display_status);
+        displayStatus = (TextView) findViewById(R.id.display_status);
         displayStatus.setText("Server hosted on " + ip);
 
         Thread serverThread = new Thread(new ServerThread());
@@ -49,7 +49,7 @@ public class ServerActivity extends AppCompatActivity {
         buttonSend.setEnabled(false);
         buttonSend.setOnClickListener(v -> {
 
-            if(clientMessage.getText() != null && !clientMessage.getText().toString().trim().equals("")){
+            if (clientMessage.getText() != null && !clientMessage.getText().toString().trim().equals("")) {
                 Thread sendThread = new Thread(new SendMessage());
                 sendThread.start();
             }
@@ -59,7 +59,7 @@ public class ServerActivity extends AppCompatActivity {
     @Override
     public void onBackPressed() {
         try {
-            if(socketClient != null)
+            if (socketClient != null)
                 socketClient.close();
             super.onBackPressed();
         } catch (IOException e) {
@@ -82,15 +82,15 @@ public class ServerActivity extends AppCompatActivity {
                             synchronized (this) {
                                 for (int i = 0; i < maxClientsCount; i++) {
                                     if (clientThreads[i] != null && clientThreads[i].clientName != null && clientThreads[i].clientName.equals(words[0])) {
-                                        clientThreads[i].os.writeBytes(words[1]+ "\n");
+                                        clientThreads[i].os.writeBytes(words[1] + "\n");
                                         clientThreads[i].os.flush();
                                         break;
                                     }
                                 }
 
-                                msg = msg + "<Server> "+ msgFromServer +"\n";
+                                msg = msg + "<Server> " + msgFromServer + "\n";
 
-                                handler.post(()->{
+                                handler.post(() -> {
                                     chat.setText(msg);
                                     clientMessage.setText("");
                                 });
@@ -112,17 +112,20 @@ public class ServerActivity extends AppCompatActivity {
                             }
                         }
 
-                        if(noClientsConnected){
+                        /*
+                        If no clients are connected acknowledge the server
+                         */
+                        if (noClientsConnected) {
                             msg = msg + "No clients connected\n";
 
-                            handler.post(()->{
+                            handler.post(() -> {
                                 chat.setText(msg);
                                 clientMessage.setText("");
                             });
                         } else {
-                            msg = msg + "<Server> "+ str;
+                            msg = msg + "<Server> " + str;
 
-                            handler.post(()->{
+                            handler.post(() -> {
                                 chat.setText(msg);
                                 clientMessage.setText("");
                             });
@@ -146,10 +149,10 @@ public class ServerActivity extends AppCompatActivity {
 
                 while (true) {
                     socketClient = serverSocket.accept();
-                    handler.post(() ->{
-                        if(!clientMessage.isEnabled()) clientMessage.setEnabled(true);
-                        if(!buttonSend.isEnabled()) buttonSend.setEnabled(true);
-                    } );
+                    handler.post(() -> {
+                        if (!clientMessage.isEnabled()) clientMessage.setEnabled(true);
+                        if (!buttonSend.isEnabled()) buttonSend.setEnabled(true);
+                    });
 
                     int i = 0;
                     for (i = 0; i < maxClientsCount; i++) {
@@ -175,7 +178,7 @@ public class ServerActivity extends AppCompatActivity {
         }
     }
 
-    public class ClientThread extends Thread{
+    public class ClientThread extends Thread {
         private String clientName = null;
         private DataInputStream is = null;
         private DataOutputStream os = null;
@@ -201,6 +204,9 @@ public class ServerActivity extends AppCompatActivity {
                 is = new DataInputStream(clientSocket.getInputStream());
                 os = new DataOutputStream(clientSocket.getOutputStream());
 
+                /*
+                Name of the client is retrieved from the first input
+                 */
                 String name = is.readLine();
 
                 synchronized (this) {
@@ -211,8 +217,8 @@ public class ServerActivity extends AppCompatActivity {
                         }
                     }
 
-                    handler.post(()->{
-                        msg = msg + "*** A new client " + name + " joined!!! ***"+"\n";
+                    handler.post(() -> {
+                        msg = msg + "*** A new client " + name + " joined!!! ***" + "\n";
                         chat.setText(msg);
                     });
                 }
@@ -229,8 +235,8 @@ public class ServerActivity extends AppCompatActivity {
                 }
 
                 synchronized (this) {
-                    handler.post(()->{
-                        msg = msg + "*** Client " + name + " left!!! ***"+"\n";
+                    handler.post(() -> {
+                        msg = msg + "*** Client " + name + " left!!! ***" + "\n";
                         chat.setText(msg);
                     });
                 }
@@ -253,6 +259,7 @@ public class ServerActivity extends AppCompatActivity {
                 os.close();
                 clientSocket.close();
             } catch (IOException e) {
+                System.out.println(e);
             }
         }
     }

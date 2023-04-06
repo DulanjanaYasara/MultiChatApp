@@ -2,7 +2,9 @@ package com.example.multichatapp;
 
 import android.os.Bundle;
 import android.os.Handler;
+
 import androidx.appcompat.app.AppCompatActivity;
+
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
@@ -33,7 +35,7 @@ public class ClientActivity extends AppCompatActivity {
 
         chat = (TextView) findViewById(R.id.chat);
         serverIp = (EditText) findViewById(R.id.server_ip);
-        clientName = (EditText)findViewById(R.id.user_name);
+        clientName = (EditText) findViewById(R.id.user_name);
         smessage = (EditText) findViewById(R.id.client_message);
         sent = (Button) findViewById(R.id.sent_button);
         button_connect = (Button) findViewById(R.id.button_connect);
@@ -41,23 +43,23 @@ public class ClientActivity extends AppCompatActivity {
 
         sent.setEnabled(false);
         sent.setOnClickListener(v -> {
-            if(smessage.getText() != null && !smessage.getText().toString().equals("")){
+            if (smessage.getText() != null && !smessage.getText().toString().equals("")) {
                 Thread sentThread = new Thread(new sentMessage());
                 sentThread.start();
             }
         });
 
+        /**
+         * validation checking before creating the socket connection
+         */
         button_connect.setOnClickListener(v -> {
-            if(serverIp.getText() == null || serverIp.getText().toString().equals("")){
-                Toast.makeText(getApplicationContext(),"Server IP cannot be empty", Toast.LENGTH_SHORT).show();
-            }
-            else if(clientName.getText() == null || clientName.getText().toString().equals("")){
-                Toast.makeText(getApplicationContext(),"Client Name cannot be empty", Toast.LENGTH_SHORT).show();
-            }
-            else if(clientName.getText() != null && clientName.getText().toString().indexOf('@') != -1){
-                Toast.makeText(getApplicationContext(),"Cannot contain '@' character", Toast.LENGTH_SHORT).show();
-            }
-            else {
+            if (serverIp.getText() == null || serverIp.getText().toString().equals("")) {
+                Toast.makeText(getApplicationContext(), "Server IP cannot be empty", Toast.LENGTH_SHORT).show();
+            } else if (clientName.getText() == null || clientName.getText().toString().equals("")) {
+                Toast.makeText(getApplicationContext(), "Client Name cannot be empty", Toast.LENGTH_SHORT).show();
+            } else if (clientName.getText() != null && clientName.getText().toString().indexOf('@') != -1) {
+                Toast.makeText(getApplicationContext(), "Cannot contain '@' character", Toast.LENGTH_SHORT).show();
+            } else {
                 serverIpAddress = serverIp.getText().toString();
                 Thread clientThread = new Thread(new
                         ClientThread());
@@ -66,8 +68,8 @@ public class ClientActivity extends AppCompatActivity {
         });
 
         button_disconnect.setEnabled(false);
-        button_disconnect.setOnClickListener(v->{
-            if(socket !=null){
+        button_disconnect.setOnClickListener(v -> {
+            if (socket != null) {
                 try {
                     button_connect.setEnabled(true);
                     serverIp.setEnabled(true);
@@ -91,7 +93,7 @@ public class ClientActivity extends AppCompatActivity {
     @Override
     public void onBackPressed() {
         try {
-            if(socket !=null)
+            if (socket != null)
                 socket.close();
             super.onBackPressed();
         } catch (IOException e) {
@@ -120,7 +122,7 @@ public class ClientActivity extends AppCompatActivity {
         public void run() {
             try {
                 str = smessage.getText().toString() + "\n";
-                msg = msg + "<"+ clientName.getText().toString() + "> " + str;
+                msg = msg + "<" + clientName.getText().toString() + "> " + str;
                 handler.post(() -> {
                     chat.setText(msg);
                     smessage.setText("");
@@ -141,7 +143,7 @@ public class ClientActivity extends AppCompatActivity {
                 InetAddress serverAddr =
                         InetAddress.getByName(serverIpAddress);
                 socket = new Socket(serverAddr, 10000); //create client socket
-                handler.post(() ->{
+                handler.post(() -> {
                     chat.setText("Connected to server");
                     smessage.setEnabled(true);
                     sent.setEnabled(true);
@@ -149,7 +151,7 @@ public class ClientActivity extends AppCompatActivity {
                     button_connect.setEnabled(false);
                     serverIp.setEnabled(false);
                     clientName.setEnabled(false);
-                } );
+                });
 
                 /*******************************************
                  setup i/p streams
@@ -157,13 +159,16 @@ public class ClientActivity extends AppCompatActivity {
                 in = new DataInputStream(socket.getInputStream());
                 os = new DataOutputStream(socket.getOutputStream());
 
-                os.writeBytes(clientName.getText().toString().trim()+"\n");
+                /**
+                 * Passing the client name to the server
+                 */
+                os.writeBytes(clientName.getText().toString().trim() + "\n");
                 os.flush();
 
                 String line = null;
-                while (in!=null && (line = in.readLine()) != null) {
+                while (in != null && (line = in.readLine()) != null) {
                     if (line.startsWith("/busy")) {
-                        handler.post(() ->{
+                        handler.post(() -> {
                             chat.setText("Server too busy. Try again later");
                             smessage.setEnabled(false);
                             sent.setEnabled(false);
@@ -179,11 +184,11 @@ public class ClientActivity extends AppCompatActivity {
                     handler.post(() -> chat.setText(msg));
                 }
 
-                if(in!=null) in.close();
-                if(socket!=null) socket.close();
+                if (in != null) in.close();
+                if (socket != null) socket.close();
 
             } catch (IOException e) {
-                handler.post(() -> Toast.makeText(getApplicationContext(),"Connection Error", Toast.LENGTH_SHORT).show());
+                handler.post(() -> Toast.makeText(getApplicationContext(), "Connection Error", Toast.LENGTH_SHORT).show());
             } catch (Exception e) {
                 System.out.println(e);
             }
